@@ -1,0 +1,51 @@
+name: Trivy Container Image Scan - Edge
+
+on:
+#     push:
+#      branches: [ "master" ]
+#       paths:
+#         - './edge-Dockerfile'
+#         - './Dockerfile'
+#         - './.dockerignore'
+#         - './docker-compose.yml'
+#         - './clamd.conf
+#         - './freshclam.conf
+#         - './scan.sh'
+    pull_request:
+      branches: [ "master" ]
+      paths-ignore:
+        - './docs/**'
+        - './.github/**'
+        - './zensical.toml'
+    workflow_dispatch:
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+## Build and scan Edge image
+      - name: Build an image from Dockerfile - edge
+        uses: docker/build-push-action@v7.4.0
+        with:
+          context: .
+          file: ./edge-Dockerfile
+          push: false
+          tags: ${{ secrets.DOCKER_USERNAME }}/clamav-alpine:${{ github.sha }} 
+  
+      - name: Run Trivy vulnerability scanner - edge
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: 'docker.io/${{ secrets.DOCKER_USERNAME }}/clamav-alpine:${{ github.sha }}'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+
+## Upload to Security tab
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v4
+        if: always()
+        with:
+          sarif_file: 'trivy-results.sarif'

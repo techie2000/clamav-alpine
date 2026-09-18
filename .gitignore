@@ -1,0 +1,16 @@
+site/
+*.swp
+.DS_Store
+node_modules/**
+dist/**
+.vscode/**
+.env
+.env.local
+.env.*.local
+.idea/**
+*.iml
+out/**
+*.log
+docs-old/**
+secrover/**
+.github/workflows/trivy**
